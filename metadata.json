@@ -1,0 +1,5 @@
+{
+  "name": "Firemess - Secure Corporate Chat",
+  "description": "A secure, end-to-end encrypted corporate messaging application using Airtable as a backend.",
+  "requestFramePermissions": []
+}

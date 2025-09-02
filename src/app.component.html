@@ -1,0 +1,113 @@
+<div class="min-h-screen bg-gray-900 text-gray-200 antialiased p-4 sm:p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-white">Пользователи</h1>
+      <button (click)="openModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+        <span>New User</span>
+      </button>
+    </header>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-20">
+        <div class="flex flex-col items-center space-y-3 text-gray-400">
+            <svg class="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <span class="text-lg font-medium">Loading Users...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Error State -->
+    @if (error() && !isLoading()) {
+      <div class="bg-red-900/50 border border-red-700 text-red-200 px-6 py-4 rounded-lg text-center max-w-lg mx-auto">
+        <strong class="font-bold text-lg block">An Error Occurred</strong>
+        <span class="block mt-2">{{ error() }}</span>
+        <button (click)="loadUsers()" class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold transition">
+          Retry
+        </button>
+      </div>
+    }
+
+    <!-- User Table -->
+    @if (!isLoading() && !error()) {
+      <div class="bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-300">
+            <thead class="text-xs text-gray-400 uppercase bg-gray-700/50">
+              <tr>
+                <th scope="col" class="px-6 py-3">Имя</th>
+                <th scope="col" class="px-6 py-3">Почта</th>
+                <th scope="col" class="px-6 py-3">Пароль</th>
+                <th scope="col" class="px-6 py-3">Аватар</th>
+                <th scope="col" class="px-6 py-3"><span class="sr-only">Edit</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users(); track user.id) {
+                <tr class="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
+                  <td class="px-6 py-4 font-medium text-white whitespace-nowrap">{{ user.name }}</td>
+                  <td class="px-6 py-4">{{ user.email }}</td>
+                  <td class="px-6 py-4 font-mono">{{ user.password }}</td>
+                  <td class="px-6 py-4">
+                    <img class="w-10 h-10 rounded-full" [src]="user.avatarUrl" [alt]="user.name">
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <button (click)="openModal(user)" class="font-medium text-indigo-400 hover:underline">Edit</button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                    <td colspan="5" class="text-center py-10 text-gray-500">No users found in Notion database.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Edit/Create Modal -->
+  @if (isModalOpen()) {
+    <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" (click)="closeModal()">
+      <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md" (click)="$event.stopPropagation()">
+        <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+          <div class="p-6">
+            <h3 class="text-xl font-semibold mb-4">{{ currentUser() ? 'Edit User' : 'Create New User' }}</h3>
+            <div class="space-y-4">
+              <div>
+                <label for="name" class="block mb-2 text-sm font-medium text-gray-300">Имя</label>
+                <input type="text" id="name" formControlName="name" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5" required>
+              </div>
+              <div>
+                <label for="email" class="block mb-2 text-sm font-medium text-gray-300">Почта</label>
+                <input type="email" id="email" formControlName="email" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5" required>
+              </div>
+              <div>
+                <label for="password" class="block mb-2 text-sm font-medium text-gray-300">Пароль</label>
+                <input type="text" id="password" formControlName="password" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+              </div>
+              <div>
+                <label for="avatarUrl" class="block mb-2 text-sm font-medium text-gray-300">Аватар URL</label>
+                <input type="url" id="avatarUrl" formControlName="avatarUrl" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5" placeholder="https://...">
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-700/50 px-6 py-3 flex justify-end items-center space-x-3 rounded-b-lg">
+            <button type="button" (click)="closeModal()" class="px-4 py-2 text-sm font-medium text-gray-300 bg-transparent hover:bg-gray-600 rounded-lg transition">Cancel</button>
+            <button type="submit" [disabled]="userForm.invalid || isSaving()" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition disabled:bg-indigo-800 disabled:cursor-not-allowed flex items-center">
+              @if(isSaving()) {
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Saving...</span>
+              } @else {
+                <span>Save</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
